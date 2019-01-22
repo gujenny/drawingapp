@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <title>Draw</title>
+        <style>
+            body {
+                text-align: center;
+                font-family: sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>DRAW SOMETHING</h1>
+        <button id="erase">Erase</button>
+        <button id="doodle">Doodle</button>
+        <button id="rectangle">Rectangle</button>
+        <button id="circle">Circle</button>
+        <svg id="svg" style="width:100%; height:800px;" />
+    </body>
+    <script>
+        let prev = null;
+        let prevr = null;
+        let prevrad = null;
+        const svg = d3.select('#svg');
+        let drawing = false;
+        let drawrect = false;
+        let drawcirc = false;
+        let drawing_l = false;
+        let drawing_r = false;
+        let drawing_c = false;
+
+        function draw_line() {
+            if (!drawing || !drawing_l)
+                return;
+            if (prev == null) {
+                prev = d3.mouse(this);
+            }
+            const coords = d3.mouse(this);
+
+            svg.append("line")
+              .attr("x1", prev[0])
+              .attr("y1", prev[1])
+              .attr('x2', coords[0])
+              .attr("y2", coords[1])
+              .attr("stroke-width", 2)
+              .attr("stroke", "black");
+
+            prev = coords;
+        }
+
+        function draw_rect() {
+            if (!drawing_r) {
+                return;
+            }
+            if (drawrect && prevr == null) {
+                prevr = d3.mouse(this);
+            }
+            // if (drawrect && prevr) {
+            //     const coords = d3.mouse(this);
+            // }
+            if (!drawrect && prevr) {
+                const coords = d3.mouse(this);
+                svg.append("rect")
+                    .attr("x", Math.min(prevr[0], coords[0]))
+                    .attr("y", Math.min(prevr[1], coords[1]))
+                    .attr("width", Math.abs(coords[0] - prevr[0]))
+                    .attr("height", Math.abs(coords[1] - prevr[1]));
+                prevr = null;
+            }
+        }
+
+        function draw_circ() {
+            if (!drawing_c) {
+                return;
+            }
+            if (drawcirc && prevrad == null) {
+                prevrad = d3.mouse(this);
+            }
+            if (!drawcirc && prevrad) {
+                const coords = d3.mouse(this);
+                const dist = Math.pow(Math.pow(prevrad[0] - coords[0], 2) + Math.pow(prevrad[1] - coords[1], 2), .5);
+                svg.append("circle")
+                    .attr("cx", prevrad[0])
+                    .attr("cy", prevrad[1])
+                    .attr("r", dist);
+                prevrad = null;
+            }
+        }
+
+        document.querySelector("#erase").onclick = erase;
+
+        function erase() {
+            svg.selectAll("*").remove();
+            document.querySelector("#doodle").style.background = "#e7e7e7";
+            document.querySelector("#rectangle").style.background = "#e7e7e7";
+            document.querySelector("#circle").style.background = "#e7e7e7";
+            drawing_c = false;
+            drawing_l = false;
+            drawing_r = false;
+        }
+
+        document.querySelector("#doodle").onclick = () => {
+            drawing_l = true;
+            drawing_c = false;
+            drawing_r = false;
+            document.querySelector("#doodle").style.background = "#4BA0AC";
+            document.querySelector("#rectangle").style.background = "#e7e7e7";
+            document.querySelector("#circle").style.background = "#e7e7e7";
+            svg.on('mousedown', () => {
+                drawing = true;
+            });
+
+            svg.on('mouseup', () => {
+                drawing = false;
+                prev = null;
+            });
+
+            svg.on('mousemove', draw_line);
+        };
+
+        document.querySelector("#rectangle").onclick = () => {
+            drawing_l = false;
+            drawing_c = false;
+            drawing_r = true;
+            document.querySelector("#doodle").style.background = "#e7e7e7";
+            document.querySelector("#rectangle").style.background = "#4BA0AC";
+            document.querySelector("#circle").style.background = "#e7e7e7";
+            svg.on('mousedown', () => {
+                drawrect = true;
+            });
+
+            svg.on('mouseup', () => {
+                drawrect = false;
+            });
+
+            svg.on('mousemove', draw_rect);
+        };
+
+        document.querySelector("#circle").onclick = () => {
+            drawing_l = false;
+            drawing_c = true;
+            drawing_r = false;
+            document.querySelector("#doodle").style.background = "#e7e7e7";
+            document.querySelector("#rectangle").style.background = "#e7e7e7";
+            document.querySelector("#circle").style.background = "#4BA0AC";
+            svg.on('mousedown', () => {
+                drawcirc = true;
+            });
+
+            svg.on('mouseup', () => {
+                drawcirc = false;
+            });
+
+            svg.on('mousemove', draw_circ);
+        }
+    </script>
+</html>
